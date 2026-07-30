@@ -5,6 +5,9 @@ import pandas as pd
 import streamlit as st
 
 
+APP_VERSION = "2.2"
+
+
 st.set_page_config(
     page_title="Reto GuateCome",
     page_icon="🚀",
@@ -329,6 +332,7 @@ ROLE_GUIDANCE = {
 
 def fresh_state():
     return {
+        "app_version": APP_VERSION,
         "screen": "intro",
         "team_name": "",
         "participants": "",
@@ -361,7 +365,7 @@ def init_game():
         st.session_state[key] = value
 
 
-if "screen" not in st.session_state:
+if "screen" not in st.session_state or st.session_state.get("app_version") != APP_VERSION:
     init_game()
 
 
@@ -559,6 +563,7 @@ def go_to_next_day():
 def sidebar():
     with st.sidebar:
         st.title("🚀 GuateCome")
+        st.caption(f"Versión {APP_VERSION} · instrucciones guiadas")
         if st.session_state.team_name:
             st.caption(f"Equipo: {st.session_state.team_name}")
         st.progress(min(st.session_state.sprint, 5) / 5, text=f"Sprint {min(st.session_state.sprint, 5)} de 5")
