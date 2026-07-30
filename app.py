@@ -5,7 +5,7 @@ import pandas as pd
 import streamlit as st
 
 
-APP_VERSION = "2.2"
+APP_VERSION = "2.3"
 
 
 st.set_page_config(
@@ -591,19 +591,89 @@ def screen_intro():
     st.markdown(
         """
         <div class="case-card">
-            <h3>El caso</h3>
-            <p><strong>GuateCome</strong> conectará a consumidores con restaurantes pequeños y de
-            barrio que normalmente no aparecen en las grandes plataformas de delivery.</p>
-            <p>La empresa recibió <strong>Q500,000</strong> y presentará el producto a inversionistas
-            dentro de cinco semanas. El equipo dispone de <strong>5 sprints de 5 días</strong> para
-            lanzar un MVP. No será posible construir todo.</p>
+            <h3>1. La empresa y la oportunidad</h3>
+            <p><strong>GuateCome</strong> es una startup guatemalteca que quiere competir en el
+            mercado de entrega de comida. Las plataformas grandes se concentran en restaurantes
+            conocidos, mientras muchos negocios pequeños y de barrio tienen poca presencia digital.</p>
+            <p>GuateCome quiere atender ese espacio con un catálogo organizado por zonas, una
+            experiencia de compra sencilla y atención cercana. Sus clientes serán personas que
+            buscan comida local y restaurantes que necesitan recibir pedidos por internet.</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
+
+    left, right = st.columns(2)
+    with left:
+        st.markdown(
+            """
+            <div class="case-card">
+                <h3>2. El encargo del CEO</h3>
+                <p>La empresa recibió una inversión inicial de <strong>Q500,000</strong>. Dentro de
+                cinco semanas, el CEO presentará GuateCome ante un grupo de inversionistas.</p>
+                <p>Para esa reunión necesita demostrar un <strong>Producto Mínimo Viable (MVP)</strong>
+                que permita realizar el recorrido básico de una compra.</p>
+                <p>El trabajo se realizará en <strong>5 sprints de 5 días</strong>.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with right:
+        st.markdown(
+            """
+            <div class="case-card">
+                <h3>3. El problema</h3>
+                <p>El Product Backlog contiene más funcionalidades de las que el equipo puede
+                terminar. Además, durante los sprints aparecerán problemas técnicos, solicitudes
+                urgentes y dependencias externas.</p>
+                <p>No podrán construir todo. Aceptar demasiado trabajo puede provocar historias
+                incompletas, deuda técnica y desgaste del equipo.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.subheader("El MVP que debe llegar a la presentación")
+    st.markdown(
+        """
+        Para demostrar una compra básica, el producto debe incluir obligatoriamente:
+
+        - **Registro de usuarios:** permite identificar a la persona que realiza el pedido.
+        - **Catálogo por zona:** permite encontrar restaurantes disponibles.
+        - **Carrito de compras:** permite seleccionar los productos.
+        - **Pago con tarjeta:** permite completar la compra.
+
+        El backlog también contiene funciones atractivas —como seguimiento, reseñas y WhatsApp—,
+        pero el equipo deberá decidir cuáles aportan suficiente valor para incluirlas.
+        """
+    )
+
+    st.subheader("El papel de ustedes")
     st.info(
-        "Qué hacer ahora: escriban un nombre para el equipo y los nombres de sus integrantes. "
-        "Después presionen **Aceptar el reto**."
+        "Ustedes son el equipo Scrum de GuateCome. En cada sprint deberán priorizar el backlog, "
+        "seleccionar una cantidad realista de trabajo y responder a los obstáculos desde el rol indicado. "
+        "El objetivo no es completar más puntos que los demás: es lanzar un MVP valioso sin destruir "
+        "la moral, el presupuesto ni la calidad técnica."
+    )
+
+    st.subheader("¿Cuándo se considera exitoso el proyecto?")
+    success_cols = st.columns(4)
+    success_cols[0].metric("Plazo", "5 sprints")
+    success_cols[1].metric("Presupuesto inicial", "Q500,000")
+    success_cols[2].metric("MVP obligatorio", "4 historias")
+    success_cols[3].metric("Meta", "Entregar valor")
+
+    st.markdown(
+        """
+        Un buen resultado combina cuatro elementos: completar el MVP obligatorio, entregar alto
+        valor de negocio, mantener una moral saludable y controlar la deuda técnica. Las decisiones
+        del equipo determinarán el resultado final.
+        """
+    )
+
+    st.info(
+        "**Qué hacer ahora:** asegúrense de comprender el encargo. Después escriban el nombre del "
+        "equipo y sus integrantes, y presionen **Aceptar el reto** para conocer las reglas."
     )
 
     with st.form("team_form"):
