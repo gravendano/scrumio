@@ -614,16 +614,11 @@ def screen_intro():
 
 
 def screen_mission():
-    st.title("🎯 Misión y reglas")
+    st.title("🎯 Antes de comenzar: así funciona la simulación")
     st.info(
-        "Lancen un MVP funcional antes de terminar el quinto sprint. "
-        "Prioricen valor sin agotar al equipo ni acumular demasiada deuda técnica."
-    )
-    st.markdown(
-        """
-        **Qué deben hacer:** lean esta pantalla antes de comenzar. No necesitan memorizarla:
-        cada etapa volverá a mostrar una instrucción corta.
-        """
+        "Su misión es lanzar el MVP de GuateCome antes de terminar el quinto sprint. "
+        "Para lograrlo deberán priorizar, comprometer una cantidad realista de trabajo "
+        "y responder a los obstáculos sin descuidar al equipo."
     )
 
     st.subheader("El MVP obligatorio")
@@ -632,11 +627,30 @@ def screen_mission():
     for col, story in zip(cols, mandatory):
         col.metric(story["name"], f"{story['points']} pts", f"Valor {story['value']}")
 
-    st.subheader("Cómo se juega")
-    left, middle, right = st.columns(3)
-    left.markdown("#### 1. Planning\nOrdenen y seleccionen historias según su valor y capacidad.")
-    middle.markdown("#### 2. Sprint\nDurante cinco días tomarán decisiones desde distintos roles.")
-    right.markdown("#### 3. Review y Retro\nRevisen lo entregado y elijan una mejora para el siguiente sprint.")
+    st.subheader("Qué ocurrirá en cada sprint")
+    st.markdown(
+        """
+        1. **Sprint Planning:** el Product Owner ordena las historias según su importancia.
+           Después, el Development Team marca cuáles cree que puede completar. Los **puntos**
+           representan esfuerzo y el **valor** representa el beneficio para el negocio.
+        2. **Cinco días de trabajo:** cada día aparecerá una situación. La pantalla indicará
+           qué rol debe decidir. El equipo conversa, selecciona una alternativa y después
+           descubre cómo cambian la capacidad, la moral, la deuda técnica y el presupuesto.
+        3. **Sprint Review:** la aplicación compara la capacidad final con el trabajo elegido.
+           Solo las historias terminadas entregan puntos y valor. Las historias incompletas
+           regresan al Product Backlog.
+        4. **Retrospectiva:** el equipo selecciona una mejora. Esa mejora tendrá un efecto
+           real durante el siguiente sprint.
+        5. **Repetición:** el proceso se repite durante cinco sprints. Al final se revisa si
+           el MVP fue completado y se pueden descargar los resultados.
+        """
+    )
+
+    st.warning(
+        "**Importante:** el Sprint 1 contiene cinco obstáculos, uno por día. "
+        "Los demás sprints contienen cuatro obstáculos y un día de avance estable. "
+        "Las consecuencias permanecen ocultas hasta que el equipo toma una decisión."
+    )
 
     st.subheader("Quién decide")
     roles = st.columns(3)
@@ -661,7 +675,19 @@ def screen_mission():
             """
         )
 
-    st.warning("Las consecuencias no se muestran antes de decidir. Conversen desde la perspectiva del rol indicado.")
+    st.subheader("Cómo se obtiene un buen resultado")
+    st.markdown(
+        """
+        - Completen las cuatro funcionalidades obligatorias del MVP.
+        - Entreguen historias con alto valor de negocio.
+        - Eviten comprometer mucho más trabajo que la capacidad del equipo.
+        - Mantengan una moral saludable y controlen la deuda técnica.
+        - Utilicen las retrospectivas para corregir problemas observados.
+        """
+    )
+    st.success(
+        "No necesitan memorizar estas reglas. Cada pantalla volverá a indicar brevemente qué deben hacer."
+    )
     if st.button("Ir al primer Sprint Planning", type="primary", width="stretch"):
         st.session_state.screen = "planning"
         st.rerun()
