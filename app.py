@@ -319,6 +319,13 @@ RETROSPECTIVES = {
     },
 }
 
+ROLE_GUIDANCE = {
+    "Product Owner": "Protege el valor del producto y el objetivo del sprint. Decide qué es más importante para el negocio.",
+    "Scrum Master": "Ayuda a eliminar obstáculos y protege la forma de trabajo del equipo, sin decidir por las demás personas.",
+    "Development Team": "Protege la calidad y decide cómo realizar el trabajo de acuerdo con la capacidad disponible.",
+    "Equipo Scrum": "Conversen como equipo y mantengan el foco en el objetivo del sprint.",
+}
+
 
 def fresh_state():
     return {
@@ -380,9 +387,14 @@ def prepare_sprint(planned_stories):
     st.session_state.base_capacity = max(15, expected - quality_cost)
     st.session_state.sprint_capacity = st.session_state.base_capacity
 
-    event_pool = random.sample(EVENTS, 4)
-    event_pool.append(
-        {
+    # El primer sprint funciona como tutorial: todos los días presentan una decisión.
+    # En los siguientes sprints hay cuatro obstáculos y un día de avance estable.
+    if st.session_state.sprint == 1:
+        event_pool = random.sample(EVENTS, 5)
+        random.shuffle(event_pool)
+    else:
+        challenges = random.sample(EVENTS, 4)
+        calm_day = {
             "title": "Día de avance estable",
             "icon": "✅",
             "description": "No aparecen bloqueos importantes. El equipo puede concentrarse en el objetivo del sprint.",
@@ -390,8 +402,11 @@ def prepare_sprint(planned_stories):
             "tags": ["calm"],
             "choices": [],
         }
-    )
-    random.shuffle(event_pool)
+        random.shuffle(challenges)
+        # El día estable nunca aparece primero, para que cada sprint comience con una decisión.
+        calm_position = random.randint(1, 4)
+        event_pool = challenges.copy()
+        event_pool.insert(calm_position, calm_day)
     st.session_state.sprint_events = event_pool
 
 
@@ -581,6 +596,10 @@ def screen_intro():
         """,
         unsafe_allow_html=True,
     )
+    st.info(
+        "Qué hacer ahora: escriban un nombre para el equipo y los nombres de sus integrantes. "
+        "Después presionen **Aceptar el reto**."
+    )
 
     with st.form("team_form"):
         col1, col2 = st.columns(2)
@@ -600,6 +619,12 @@ def screen_mission():
         "Lancen un MVP funcional antes de terminar el quinto sprint. "
         "Prioricen valor sin agotar al equipo ni acumular demasiada deuda técnica."
     )
+    st.markdown(
+        """
+        **Qué deben hacer:** lean esta pantalla antes de comenzar. No necesitan memorizarla:
+        cada etapa volverá a mostrar una instrucción corta.
+        """
+    )
 
     st.subheader("El MVP obligatorio")
     mandatory = [story for story in st.session_state.backlog if story["mandatory"]]
@@ -612,6 +637,18 @@ def screen_mission():
     left.markdown("#### 1. Planning\nOrdenen y seleccionen historias según su valor y capacidad.")
     middle.markdown("#### 2. Sprint\nDurante cinco días tomarán decisiones desde distintos roles.")
     right.markdown("#### 3. Review y Retro\nRevisen lo entregado y elijan una mejora para el siguiente sprint.")
+
+    st.subheader("Quién decide")
+    roles = st.columns(3)
+    roles[0].markdown(
+        "**Product Owner**\n\nPrioriza las historias y protege el valor de negocio."
+    )
+    roles[1].markdown(
+        "**Development Team**\n\nDecide cuánto trabajo puede completar y protege la calidad."
+    )
+    roles[2].markdown(
+        "**Scrum Master**\n\nFacilita la conversación y ayuda a resolver obstáculos."
+    )
 
     with st.expander("¿Qué significa cada indicador?"):
         st.markdown(
@@ -639,7 +676,7 @@ def screen_planning():
         <div class="case-card">
             <span class="role-pill">Product Owner + Development Team</span>
             <h3>¿Qué construiremos ahora?</h3>
-            <p>Asigne una prioridad y seleccione las historias del sprint.
+            <p>Asignen una prioridad y seleccionen las historias del sprint.
             La capacidad orientativa es de <strong>{guide_capacity} puntos</strong>.</p>
             <p class="small-note">El Product Owner prioriza valor; el equipo decide cuánto puede completar con calidad.</p>
         </div>
@@ -654,6 +691,16 @@ def screen_planning():
             st.session_state.screen = "end"
             st.rerun()
         return
+
+    st.info(
+        "**Qué hacer:** 1) escriban la prioridad de cada historia —1 es la más importante—; "
+        "2) marquen **Incluir** en las historias que desean trabajar; "
+        "3) revisen los puntos, el valor y el riesgo; 4) confirmen el Sprint Backlog."
+    )
+    st.caption(
+        "Si la capacidad no alcanza, las historias con mayor prioridad tienen preferencia. "
+        "Las historias incompletas regresan al Product Backlog."
+    )
 
     rows = []
     for index, story in enumerate(st.session_state.backlog, start=1):
@@ -694,6 +741,14 @@ def screen_planning():
     risk = "Alto" if planned_points > guide_capacity * 1.2 else "Moderado" if planned_points > guide_capacity else "Controlado"
     col3.metric("Riesgo del compromiso", risk)
 
+    if planned_points > guide_capacity:
+        st.warning(
+            f"El compromiso supera la capacidad orientativa por {planned_points - guide_capacity} puntos. "
+            "El equipo puede aceptarlo, pero aumenta la posibilidad de dejar historias incompletas."
+        )
+    elif planned_points > 0:
+        st.success("El compromiso se encuentra dentro de la capacidad orientativa.")
+
     submitted = st.button("Confirmar Sprint Backlog", type="primary", width="stretch")
     if submitted:
         if selected_rows.empty:
@@ -702,6 +757,7 @@ def screen_planning():
             id_map = {story["id"]: story for story in st.session_state.backlog}
             selected = [id_map[row_id] for row_id in selected_rows["ID"].tolist()]
             prepare_sprint(selected)
+            challenge_count = sum(1 for event in st.session_state.sprint_events if event["choices"])
             st.session_state.event_log.append(
                 {
                     "Equipo": st.session_state.team_name,
@@ -711,7 +767,10 @@ def screen_planning():
                     "Rol": "Equipo Scrum",
                     "Evento": "Sprint Planning",
                     "Decisión": " | ".join(story["name"] for story in selected),
-                    "Resultado": f"Se comprometieron {planned_points} puntos con valor potencial {planned_value}.",
+                    "Resultado": (
+                        f"Se comprometieron {planned_points} puntos con valor potencial {planned_value}. "
+                        f"El sprint tendrá {challenge_count} obstáculos."
+                    ),
                     "Cambio capacidad": 0,
                     "Cambio moral": 0,
                     "Cambio deuda técnica": 0,
@@ -738,6 +797,13 @@ def screen_daily():
     col3.metric("Progreso temporal", f"{day * 20}%")
     st.progress(day / 5)
 
+    challenge_count = sum(1 for item in st.session_state.sprint_events if item["choices"])
+    st.info(
+        f"**Qué hacer:** lean la situación y observen qué rol debe responder. "
+        f"Conversen brevemente, elijan una alternativa y presionen el botón para conocer la consecuencia. "
+        f"Este sprint contiene **{challenge_count} obstáculos** en total."
+    )
+
     st.markdown(
         f"""
         <div class="event-card">
@@ -748,9 +814,10 @@ def screen_daily():
         """,
         unsafe_allow_html=True,
     )
+    st.caption(f"Objetivo del rol: {ROLE_GUIDANCE.get(event['role'], ROLE_GUIDANCE['Equipo Scrum'])}")
 
     if event["choices"]:
-        st.markdown("#### Conversen y elijan una respuesta")
+        st.markdown("#### ⚡ Obstáculo del día: conversen y elijan una respuesta")
         with st.form(f"decision_{sprint}_{day}"):
             selected_text = st.radio(
                 "¿Qué decide el equipo?",
@@ -805,7 +872,10 @@ def screen_consequence():
     if result["bonus_note"]:
         st.success(f"Mejora de retrospectiva aplicada: {result['bonus_note']}")
 
-    st.info("Pregunta rápida: ¿qué principio de Scrum apoyó o puso en riesgo esta decisión?")
+    st.info(
+        "**Qué hacer:** revisen qué indicadores cambiaron y lean la explicación. "
+        "Después respondan brevemente: ¿qué principio de Scrum apoyó o puso en riesgo esta decisión?"
+    )
     label = "Ir al Sprint Review" if st.session_state.day >= 5 else "Continuar al siguiente día"
     if st.button(label, type="primary", width="stretch"):
         go_to_next_day()
@@ -815,6 +885,10 @@ def screen_consequence():
 def screen_review():
     outcome = st.session_state.sprint_outcome
     st.title(f"🔄 Sprint {st.session_state.sprint}: Review")
+    st.info(
+        "**Qué hacer:** comparen lo planificado con lo completado. "
+        "Identifiquen qué historias entregaron valor y cuáles regresaron al Product Backlog."
+    )
     cols = st.columns(4)
     cols[0].metric("Planificado", outcome["Puntos planificados"])
     cols[1].metric("Completado", outcome["Puntos completados"])
@@ -853,6 +927,10 @@ def screen_retrospective():
         </div>
         """,
         unsafe_allow_html=True,
+    )
+    st.info(
+        "**Qué hacer:** conversen sobre lo ocurrido y elijan una sola mejora. "
+        "La mejora seleccionada modificará realmente los eventos del próximo sprint."
     )
 
     with st.form(f"retro_{st.session_state.sprint}"):
@@ -963,6 +1041,9 @@ def screen_end():
     st.dataframe(pd.DataFrame(st.session_state.sprint_summaries), hide_index=True, width="stretch")
 
     st.subheader("📥 Exportar resultados")
+    st.info(
+        "**Qué hacer:** descarguen el reporte detallado para revisar las decisiones o el resumen para comparar los cinco sprints."
+    )
     left, right = st.columns(2)
     left.download_button(
         "Descargar decisiones detalladas (CSV)",
